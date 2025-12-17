@@ -33,7 +33,6 @@ public class GameManager : MonoBehaviour
         endPanel.SetActive(false);
 
         emailImage.preserveAspect = true;
-
         score = 0;
     }
 
@@ -43,13 +42,24 @@ public class GameManager : MonoBehaviour
             return;
 
         timer -= Time.deltaTime;
-        timerText.text = Mathf.Ceil(timer).ToString();
+        timer = Mathf.Max(timer, 0f);
+
+        UpdateTimerUI();
 
         if (timer <= 0f)
         {
             canAnswer = false;
             NextEmail();
         }
+    }
+
+    void UpdateTimerUI()
+    {
+        int totalSeconds = Mathf.CeilToInt(timer);
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+
+        timerText.text = $"{minutes:00}:{seconds:00}";
     }
 
     public void StartDigitalGame()
@@ -73,6 +83,8 @@ public class GameManager : MonoBehaviour
     {
         timer = 20f;
         canAnswer = true;
+
+        UpdateTimerUI();
 
         currentEmail = shuffledEmails[currentEmailIndex];
         emailImage.sprite = currentEmail.emailSprite;
