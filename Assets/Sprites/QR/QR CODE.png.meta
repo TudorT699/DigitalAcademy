@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      QR CODE_0: 7523493880870725872
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
