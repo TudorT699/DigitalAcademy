@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
     public GameObject startPanel;
     public GameObject gamePanel;
     public GameObject endPanel;
+    public GameObject arduinoScript;
 
     [Header("UI")]
     public Image emailImage;
@@ -70,6 +71,8 @@ public class GameManager : MonoBehaviour
 
         PrepareEmails();
         LoadNextEmail();
+        arduinoScript.SetActive(true);
+
     }
 
     void PrepareEmails()
