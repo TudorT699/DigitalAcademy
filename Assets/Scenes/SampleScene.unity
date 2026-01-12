@@ -1059,7 +1059,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &531790967
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1103,7 +1103,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: d9909ecb785d1494abd0a61d6c9840ff, type: 3}
+  m_Sprite: {fileID: 21300000, guid: e4086019da97c384583e6fd179af2f24, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1981,8 +1981,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1920, y: 1440}
+  m_AnchoredPosition: {x: -0.0000038146973, y: -0.000045776}
+  m_SizeDelta: {x: 1596.093, y: 1197.069}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1221762243
 MonoBehaviour:
@@ -2113,7 +2113,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1614464088
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2121,7 +2121,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1614464087}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ebe25d2816114c04b89c281d42bfd283, type: 3}
   m_Name: 
@@ -2396,6 +2396,7 @@ MonoBehaviour:
   startPanel: {fileID: 344709344}
   gamePanel: {fileID: 531790966}
   endPanel: {fileID: 689210123}
+  arduinoScript: {fileID: 0}
   emailImage: {fileID: 1221762243}
   timerText: {fileID: 2119834472}
   scoreText: {fileID: 1212908988}
