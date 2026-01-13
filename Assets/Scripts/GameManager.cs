@@ -11,6 +11,9 @@ public class GameManager : MonoBehaviour
     public GameObject endPanel;
     public GameObject arduinoScript;
 
+    [Header("Leaderboard")]
+    public LeaderboardManager leaderboardManager;
+
     [Header("UI")]
     public Image emailImage;
     public TMP_Text timerText;
@@ -72,7 +75,6 @@ public class GameManager : MonoBehaviour
         PrepareEmails();
         LoadNextEmail();
         arduinoScript.SetActive(true);
-
     }
 
     void PrepareEmails()
@@ -138,6 +140,10 @@ public class GameManager : MonoBehaviour
         endPanel.SetActive(true);
 
         scoreText.text = score + "/10";
+
+        // auto-update leaderboard at the end
+        if (leaderboardManager != null)
+            leaderboardManager.AddResult(score);
     }
 
     void ShuffleList(List<EmailData> list)
