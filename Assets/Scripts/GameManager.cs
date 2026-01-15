@@ -19,16 +19,72 @@ public class GameManager : MonoBehaviour
     public TMP_Text timerText;
     public TMP_Text scoreText;
 
-    [Header("Email Data (EXACTLY 10)")]
-    public List<EmailData> emails = new List<EmailData>();
+    [Header("Answer Panels (children inside GamePanel)")]
+    public GameObject twoAnswerPanel; // the normal Legit/Phishing panel
+    public GameObject kahootRound1Panel;
+    public GameObject kahootRound2Panel;
+    public GameObject kahootRound3Panel;
+    public GameObject kahootRound4Panel;
 
-    private List<EmailData> shuffledEmails = new List<EmailData>();
-    private int currentEmailIndex = 0;
+    [System.Serializable]
+    public class NormalRoundData
+    {
+        public Sprite emailSprite;
+        public bool isLegit;
+    }
 
-    private EmailData currentEmail;
+    [System.Serializable]
+    public class KahootRoundData
+    {
+        public Sprite emailSprite;
+
+        [Header("The 4 buttons for this round")]
+        public Button buttonA;
+        public Button buttonB;
+        public Button buttonC;
+        public Button buttonD;
+
+        [Header("Correct Answer (ONLY ONE TRUE)")]
+        public bool buttonAIsCorrect;
+        public bool buttonBIsCorrect;
+        public bool buttonCIsCorrect;
+        public bool buttonDIsCorrect;
+
+        public int GetCorrectIndex()
+        {
+            if (buttonAIsCorrect) return 0;
+            if (buttonBIsCorrect) return 1;
+            if (buttonCIsCorrect) return 2;
+            if (buttonDIsCorrect) return 3;
+            return -1; // none selected
+        }
+
+        public Button GetButtonByIndex(int idx)
+        {
+            switch (idx)
+            {
+                case 0: return buttonA;
+                case 1: return buttonB;
+                case 2: return buttonC;
+                case 3: return buttonD;
+                default: return null;
+            }
+        }
+    }
+
+    [Header("Rounds 1–4 (Kahoot)")]
+    public List<KahootRoundData> kahootRounds = new List<KahootRoundData>();
+
+    [Header("Rounds 5–10 (Normal)")]
+    public List<NormalRoundData> normalRounds = new List<NormalRoundData>();
+
+    private int currentRoundIndex = 0; // 0..9
     private float timer;
     private int score;
     private bool canAnswer;
+
+    // holds which Kahoot round is active (0..3)
+    private int currentKahootIndex = -1;
 
     void Start()
     {
@@ -38,6 +94,8 @@ public class GameManager : MonoBehaviour
 
         emailImage.preserveAspect = true;
         score = 0;
+
+        HideAllAnswerPanels();
     }
 
     void Update()
@@ -53,7 +111,7 @@ public class GameManager : MonoBehaviour
         if (timer <= 0f)
         {
             canAnswer = false;
-            NextEmail();
+            NextRound();
         }
     }
 
@@ -72,66 +130,162 @@ public class GameManager : MonoBehaviour
         gamePanel.SetActive(true);
         endPanel.SetActive(false);
 
-        PrepareEmails();
-        LoadNextEmail();
-        arduinoScript.SetActive(true);
+        score = 0;
+        currentRoundIndex = 0;
+
+        if (arduinoScript != null)
+            arduinoScript.SetActive(true);
+
+        LoadCurrentRound();
     }
 
-    void PrepareEmails()
-    {
-        shuffledEmails = new List<EmailData>(emails);
-        ShuffleList(shuffledEmails);
-        currentEmailIndex = 0;
-    }
-
-    void LoadNextEmail()
-    {
-        timer = 20f;
-        canAnswer = true;
-
-        UpdateTimerUI();
-
-        currentEmail = shuffledEmails[currentEmailIndex];
-        emailImage.sprite = currentEmail.emailSprite;
-    }
-
+    // NORMAL BUTTONS (Rounds 5–10)
     public void ChooseLegit()
     {
-        CheckAnswer(true);
+        // only valid during normal rounds
+        if (!canAnswer) return;
+        if (!IsNormalRound()) return;
+
+        CheckNormalAnswer(true);
     }
 
     public void ChoosePhishing()
     {
-        CheckAnswer(false);
+        // only valid during normal rounds
+        if (!canAnswer) return;
+        if (!IsNormalRound()) return;
+
+        CheckNormalAnswer(false);
     }
 
-    void CheckAnswer(bool playerChoice)
+    void CheckNormalAnswer(bool playerChoice)
     {
-        if (!canAnswer)
-            return;
+        canAnswer = false;
+
+        int normalIndex = currentRoundIndex - 4; // rounds 5-10 map to 0-5
+        if (normalIndex >= 0 && normalIndex < normalRounds.Count)
+        {
+            if (playerChoice == normalRounds[normalIndex].isLegit)
+                score++;
+        }
+
+        NextRound();
+    }
+
+    // KAHOOT BUTTONS (Rounds 1–4)
+    void WireKahootButtons(KahootRoundData data)
+    {
+        // Remove previous listeners so they don't stack up
+        ClearButton(data.buttonA);
+        ClearButton(data.buttonB);
+        ClearButton(data.buttonC);
+        ClearButton(data.buttonD);
+
+        int correct = data.GetCorrectIndex();
+
+        // If you forget to tick one correct checkbox, treat all as wrong
+        AddKahootListener(data.buttonA, correct == 0);
+        AddKahootListener(data.buttonB, correct == 1);
+        AddKahootListener(data.buttonC, correct == 2);
+        AddKahootListener(data.buttonD, correct == 3);
+    }
+
+    void AddKahootListener(Button b, bool isCorrect)
+    {
+        if (b == null) return;
+        b.onClick.AddListener(() => KahootAnswer(isCorrect));
+    }
+
+    void ClearButton(Button b)
+    {
+        if (b == null) return;
+        b.onClick.RemoveAllListeners();
+    }
+
+    void KahootAnswer(bool isCorrect)
+    {
+        if (!canAnswer) return;
+        if (!IsKahootRound()) return;
 
         canAnswer = false;
 
-        if (playerChoice == currentEmail.isLegit)
-        {
+        if (isCorrect)
             score++;
-        }
 
-        NextEmail();
+        NextRound();
     }
 
-    void NextEmail()
+    // ROUND FLOW
+    void LoadCurrentRound()
     {
-        currentEmailIndex++;
+        timer = 20f;
+        canAnswer = true;
+        UpdateTimerUI();
 
-        if (currentEmailIndex >= shuffledEmails.Count)
+        if (IsKahootRound())
+        {
+            int kahootIndex = currentRoundIndex; // rounds 1-4 map to 0-3
+            currentKahootIndex = kahootIndex;
+
+            // Safety
+            if (kahootIndex < 0 || kahootIndex >= kahootRounds.Count)
+            {
+                // If setup is missing, skip round
+                canAnswer = false;
+                NextRound();
+                return;
+            }
+
+            KahootRoundData data = kahootRounds[kahootIndex];
+
+            emailImage.sprite = data.emailSprite;
+
+            // Show the correct Kahoot panel (1..4)
+            ShowKahootPanel(kahootIndex);
+
+            // Auto-wire the 4 buttons for THIS round
+            WireKahootButtons(data);
+        }
+        else
+        {
+            currentKahootIndex = -1;
+
+            int normalIndex = currentRoundIndex - 4; // rounds 5-10 map to 0-5
+            if (normalIndex < 0 || normalIndex >= normalRounds.Count)
+            {
+                canAnswer = false;
+                NextRound();
+                return;
+            }
+
+            emailImage.sprite = normalRounds[normalIndex].emailSprite;
+
+            ShowTwoAnswerPanel();
+        }
+    }
+
+    void NextRound()
+    {
+        currentRoundIndex++;
+
+        if (currentRoundIndex >= 10) // total rounds = 10
         {
             EndGame();
         }
         else
         {
-            LoadNextEmail();
+            LoadCurrentRound();
         }
+    }
+
+    bool IsKahootRound()
+    {
+        return currentRoundIndex >= 0 && currentRoundIndex <= 3; // rounds 1-4
+    }
+
+    bool IsNormalRound()
+    {
+        return currentRoundIndex >= 4 && currentRoundIndex <= 9; // rounds 5-10
     }
 
     void EndGame()
@@ -141,19 +295,33 @@ public class GameManager : MonoBehaviour
 
         scoreText.text = score + "/10";
 
-        // auto-update leaderboard at the end
         if (leaderboardManager != null)
             leaderboardManager.AddResult(score);
     }
 
-    void ShuffleList(List<EmailData> list)
+    // PANEL SHOW/HIDE HELPERS
+    void HideAllAnswerPanels()
     {
-        for (int i = 0; i < list.Count; i++)
-        {
-            EmailData temp = list[i];
-            int randomIndex = Random.Range(i, list.Count);
-            list[i] = list[randomIndex];
-            list[randomIndex] = temp;
-        }
+        if (twoAnswerPanel != null) twoAnswerPanel.SetActive(false);
+        if (kahootRound1Panel != null) kahootRound1Panel.SetActive(false);
+        if (kahootRound2Panel != null) kahootRound2Panel.SetActive(false);
+        if (kahootRound3Panel != null) kahootRound3Panel.SetActive(false);
+        if (kahootRound4Panel != null) kahootRound4Panel.SetActive(false);
+    }
+
+    void ShowTwoAnswerPanel()
+    {
+        HideAllAnswerPanels();
+        if (twoAnswerPanel != null) twoAnswerPanel.SetActive(true);
+    }
+
+    void ShowKahootPanel(int kahootIndex) // 0..3
+    {
+        HideAllAnswerPanels();
+
+        if (kahootIndex == 0 && kahootRound1Panel != null) kahootRound1Panel.SetActive(true);
+        if (kahootIndex == 1 && kahootRound2Panel != null) kahootRound2Panel.SetActive(true);
+        if (kahootIndex == 2 && kahootRound3Panel != null) kahootRound3Panel.SetActive(true);
+        if (kahootIndex == 3 && kahootRound4Panel != null) kahootRound4Panel.SetActive(true);
     }
 }
