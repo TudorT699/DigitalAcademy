@@ -103,10 +103,10 @@ TextureImporter:
       name: PhisingEmail3_0
       rect:
         serializedVersion: 2
-        x: 11
-        y: 9
-        width: 482
-        height: 718
+        x: 6
+        y: 0
+        width: 1515
+        height: 1024
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}

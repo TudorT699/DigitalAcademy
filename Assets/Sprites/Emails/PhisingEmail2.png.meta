@@ -5,9 +5,6 @@ TextureImporter:
   - first:
       213: -6932517870682630388
     second: PhisingEmail2_0
-  - first:
-      213: -4638167002123347774
-    second: PhisingEmail2_1
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -106,10 +103,10 @@ TextureImporter:
       name: PhisingEmail2_0
       rect:
         serializedVersion: 2
-        x: 0
+        x: 6
         y: 0
-        width: 5
-        height: 6
+        width: 1515
+        height: 1024
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -120,28 +117,6 @@ TextureImporter:
       bones: []
       spriteID: c071ae60abfbacf90800000000000000
       internalID: -6932517870682630388
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: PhisingEmail2_1
-      rect:
-        serializedVersion: 2
-        x: 4
-        y: 6
-        width: 482
-        height: 877
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 2c8df758fabe1afb0800000000000000
-      internalID: -4638167002123347774
       vertices: []
       indices: 
       edges: []
@@ -161,7 +136,6 @@ TextureImporter:
       entries: []
     nameFileIdTable:
       PhisingEmail2_0: -6932517870682630388
-      PhisingEmail2_1: -4638167002123347774
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

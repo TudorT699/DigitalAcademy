@@ -48,7 +48,7 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 1
   spriteExtrude: 1
-  spriteMeshType: 0
+  spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
@@ -103,10 +103,10 @@ TextureImporter:
       name: LegitButton_0
       rect:
         serializedVersion: 2
-        x: 108
-        y: 237
-        width: 869
-        height: 281
+        x: 0
+        y: 0
+        width: 744
+        height: 282
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
