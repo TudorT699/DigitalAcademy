@@ -26,6 +26,13 @@ public class GameManager : MonoBehaviour
     public GameObject kahootRound3Panel;
     public GameObject kahootRound4Panel;
 
+    [Header("Kahoot Audio")]
+    public AudioSource kahootAudioSource;
+
+    [Header("Menu Audio")]
+    public AudioSource menuAudioSource;
+    public AudioClip menuStartClip; // the sound that plays on the main menu
+
     [System.Serializable]
     public class NormalRoundData
     {
@@ -37,6 +44,9 @@ public class GameManager : MonoBehaviour
     public class KahootRoundData
     {
         public Sprite emailSprite;
+
+        [Header("Audio (plays at start of this Kahoot round)")]
+        public AudioClip startClip;
 
         [Header("The 4 buttons for this round")]
         public Button buttonA;
@@ -96,6 +106,14 @@ public class GameManager : MonoBehaviour
         score = 0;
 
         HideAllAnswerPanels();
+
+        // Play menu audio at game launch / main menu
+        if (menuAudioSource != null && menuStartClip != null)
+        {
+            menuAudioSource.Stop();
+            menuAudioSource.clip = menuStartClip;
+            menuAudioSource.Play();
+        }
     }
 
     void Update()
@@ -126,6 +144,10 @@ public class GameManager : MonoBehaviour
 
     public void StartDigitalGame()
     {
+        // Stop menu audio when game starts
+        if (menuAudioSource != null && menuAudioSource.isPlaying)
+            menuAudioSource.Stop();
+
         startPanel.SetActive(false);
         gamePanel.SetActive(true);
         endPanel.SetActive(false);
@@ -215,6 +237,17 @@ public class GameManager : MonoBehaviour
         NextRound();
     }
 
+    // AUDIO
+    void PlayKahootStartClip(AudioClip clip)
+    {
+        if (kahootAudioSource == null) return;
+        if (clip == null) return;
+
+        kahootAudioSource.Stop();
+        kahootAudioSource.clip = clip;
+        kahootAudioSource.Play();
+    }
+
     // ROUND FLOW
     void LoadCurrentRound()
     {
@@ -243,7 +276,10 @@ public class GameManager : MonoBehaviour
             // Show the correct Kahoot panel (1..4)
             ShowKahootPanel(kahootIndex);
 
-            // Auto-wire the 4 buttons for THIS round
+            // Audio clip for this Kahoot round
+            PlayKahootStartClip(data.startClip);
+
+            // Auto-wire the 4 buttons for this round
             WireKahootButtons(data);
         }
         else
