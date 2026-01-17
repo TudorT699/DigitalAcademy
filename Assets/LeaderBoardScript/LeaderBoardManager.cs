@@ -28,6 +28,9 @@ public class LeaderboardManager : MonoBehaviour
     public Sprite silverIcon; // Rank 2
     public Sprite bronzeIcon; // Rank 3
 
+    [Header("DEV")]
+    public bool resetSavesOnPlay = false;
+
     private const string SAVE_KEY = "LEADERBOARD_SAVE_V2";
 
     [System.Serializable]
@@ -47,6 +50,21 @@ public class LeaderboardManager : MonoBehaviour
 
     void Awake()
     {
+        // If the checkbox is ticked, wipe saved leaderboard ONCE when entering Play Mode
+        if (resetSavesOnPlay)
+        {
+            PlayerPrefs.DeleteKey(SAVE_KEY);
+            PlayerPrefs.Save();
+
+            entries.Clear();
+
+            // Reset scroll so you don't see empty space
+            if (rowsRoot != null)
+                rowsRoot.anchoredPosition = Vector2.zero;
+
+            resetSavesOnPlay = false;
+        }
+
         Load();
         RefreshRows();
     }
@@ -113,13 +131,13 @@ public class LeaderboardManager : MonoBehaviour
 
             SetRankTextVisible(row, isTop3);
 
-            // Set rank text content 
+            // Set rank text content
             if (isTop3)
                 SetText(row, "RankText", (i + 1).ToString());
             else
                 SetText(row, "RankText", ""); // keeps it empty for 4+
 
-            // Rank icon (Image) for Top 3 
+            // Rank icon (Image) for Top 3
             SetRankIcon(row, i);
 
             // Other texts
