@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
+using UnityEngine.Video;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,6 +11,11 @@ public class GameManager : MonoBehaviour
     public GameObject gamePanel;
     public GameObject endPanel;
     public GameObject arduinoScript;
+
+    [Header("Intro Pages (before starting game)")]
+    public GameObject introPanel;
+    public GameObject introPage1;
+    public GameObject introPage2;
 
     [Header("Leaderboard")]
     public LeaderboardManager leaderboardManager;
@@ -31,7 +37,24 @@ public class GameManager : MonoBehaviour
 
     [Header("Menu Audio")]
     public AudioSource menuAudioSource;
-    public AudioClip menuStartClip; // the sound that plays on the main menu
+    public AudioClip menuStartClip; // the sound that plays on the INTRO panel
+
+    [Header("Kahoot Videos (Rounds 1–4)")]
+    public GameObject kahootVideoObjR1; // RawImage that shows video
+    public GameObject kahootVideoObjR2;
+    public GameObject kahootVideoObjR3;
+    public GameObject kahootVideoObjR4;
+
+    public VideoPlayer kahootVideoPlayerR1; // VideoPlayer for round 1
+    public VideoPlayer kahootVideoPlayerR2;
+    public VideoPlayer kahootVideoPlayerR3;
+    public VideoPlayer kahootVideoPlayerR4;
+
+    [Header("Video Placeholders (visible in Scene only)")]
+    public GameObject placeholderR1;
+    public GameObject placeholderR2;
+    public GameObject placeholderR3;
+    public GameObject placeholderR4;
 
     [System.Serializable]
     public class NormalRoundData
@@ -96,9 +119,13 @@ public class GameManager : MonoBehaviour
     // holds which Kahoot round is active (0..3)
     private int currentKahootIndex = -1;
 
+    // Intro pages
+    private int introPageIndex = 0; // NEW (0 = page1, 1 = page2)
+
     void Start()
     {
         startPanel.SetActive(true);
+        if (introPanel != null) introPanel.SetActive(false); // NEW
         gamePanel.SetActive(false);
         endPanel.SetActive(false);
 
@@ -106,14 +133,10 @@ public class GameManager : MonoBehaviour
         score = 0;
 
         HideAllAnswerPanels();
+        HideAllKahootVideos(true); // show placeholders in menu
 
-        // Play menu audio at game launch / main menu
-        if (menuAudioSource != null && menuStartClip != null)
-        {
+        if (menuAudioSource != null)
             menuAudioSource.Stop();
-            menuAudioSource.clip = menuStartClip;
-            menuAudioSource.Play();
-        }
     }
 
     void Update()
@@ -142,11 +165,72 @@ public class GameManager : MonoBehaviour
         timerText.text = $"{minutes:00}:{seconds:00}";
     }
 
+    public void OpenIntro()
+    {
+        startPanel.SetActive(false);
+        if (introPanel != null) introPanel.SetActive(true);
+        gamePanel.SetActive(false);
+        endPanel.SetActive(false);
+
+        introPageIndex = 0;
+        ShowIntroPage(introPageIndex);
+
+        if (menuAudioSource != null && menuStartClip != null)
+        {
+            menuAudioSource.Stop();
+            menuAudioSource.clip = menuStartClip;
+            menuAudioSource.Play();
+        }
+    }
+
+    public void IntroBack()
+    {
+        if (introPageIndex == 0)
+        {
+            // back from page 1 -> return to main menu
+            if (introPanel != null) introPanel.SetActive(false);
+            startPanel.SetActive(true);
+
+            if (menuAudioSource != null && menuAudioSource.isPlaying)
+                menuAudioSource.Stop();
+
+            return;
+        }
+
+        // page 2 -> page 1
+        introPageIndex = 0;
+        ShowIntroPage(introPageIndex);
+    }
+
+    public void IntroNext()
+    {
+        if (introPageIndex == 0)
+        {
+            // page 1 -> page 2
+            introPageIndex = 1;
+            ShowIntroPage(introPageIndex);
+            return;
+        }
+
+        // page 2 -> start game
+        if (introPanel != null) introPanel.SetActive(false);
+        StartDigitalGame();
+    }
+
+    void ShowIntroPage(int idx)
+    {
+        if (introPage1 != null) introPage1.SetActive(idx == 0);
+        if (introPage2 != null) introPage2.SetActive(idx == 1);
+    }
+
     public void StartDigitalGame()
     {
         // Stop menu audio when game starts
         if (menuAudioSource != null && menuAudioSource.isPlaying)
             menuAudioSource.Stop();
+
+        // if intro is still open, close it
+        if (introPanel != null) introPanel.SetActive(false);
 
         startPanel.SetActive(false);
         gamePanel.SetActive(true);
@@ -164,7 +248,6 @@ public class GameManager : MonoBehaviour
     // NORMAL BUTTONS (Rounds 5–10)
     public void ChooseLegit()
     {
-        // only valid during normal rounds
         if (!canAnswer) return;
         if (!IsNormalRound()) return;
 
@@ -173,7 +256,6 @@ public class GameManager : MonoBehaviour
 
     public void ChoosePhishing()
     {
-        // only valid during normal rounds
         if (!canAnswer) return;
         if (!IsNormalRound()) return;
 
@@ -197,7 +279,6 @@ public class GameManager : MonoBehaviour
     // KAHOOT BUTTONS (Rounds 1–4)
     void WireKahootButtons(KahootRoundData data)
     {
-        // Remove previous listeners so they don't stack up
         ClearButton(data.buttonA);
         ClearButton(data.buttonB);
         ClearButton(data.buttonC);
@@ -205,7 +286,6 @@ public class GameManager : MonoBehaviour
 
         int correct = data.GetCorrectIndex();
 
-        // If you forget to tick one correct checkbox, treat all as wrong
         AddKahootListener(data.buttonA, correct == 0);
         AddKahootListener(data.buttonB, correct == 1);
         AddKahootListener(data.buttonC, correct == 2);
@@ -248,6 +328,51 @@ public class GameManager : MonoBehaviour
         kahootAudioSource.Play();
     }
 
+    // VIDEO HELPERS
+    void HideAllKahootVideos(bool showPlaceholders)
+    {
+        if (kahootVideoObjR1 != null) kahootVideoObjR1.SetActive(false);
+        if (kahootVideoObjR2 != null) kahootVideoObjR2.SetActive(false);
+        if (kahootVideoObjR3 != null) kahootVideoObjR3.SetActive(false);
+        if (kahootVideoObjR4 != null) kahootVideoObjR4.SetActive(false);
+
+        if (kahootVideoPlayerR1 != null) kahootVideoPlayerR1.Stop();
+        if (kahootVideoPlayerR2 != null) kahootVideoPlayerR2.Stop();
+        if (kahootVideoPlayerR3 != null) kahootVideoPlayerR3.Stop();
+        if (kahootVideoPlayerR4 != null) kahootVideoPlayerR4.Stop();
+
+        if (placeholderR1 != null) placeholderR1.SetActive(showPlaceholders);
+        if (placeholderR2 != null) placeholderR2.SetActive(showPlaceholders);
+        if (placeholderR3 != null) placeholderR3.SetActive(showPlaceholders);
+        if (placeholderR4 != null) placeholderR4.SetActive(showPlaceholders);
+    }
+
+    void PlayKahootVideoForRound(int kahootIndex) // 0..3
+    {
+        HideAllKahootVideos(false);
+
+        if (kahootIndex == 0)
+        {
+            if (kahootVideoObjR1 != null) kahootVideoObjR1.SetActive(true);
+            if (kahootVideoPlayerR1 != null) { kahootVideoPlayerR1.time = 0; kahootVideoPlayerR1.Play(); }
+        }
+        else if (kahootIndex == 1)
+        {
+            if (kahootVideoObjR2 != null) kahootVideoObjR2.SetActive(true);
+            if (kahootVideoPlayerR2 != null) { kahootVideoPlayerR2.time = 0; kahootVideoPlayerR2.Play(); }
+        }
+        else if (kahootIndex == 2)
+        {
+            if (kahootVideoObjR3 != null) kahootVideoObjR3.SetActive(true);
+            if (kahootVideoPlayerR3 != null) { kahootVideoPlayerR3.time = 0; kahootVideoPlayerR3.Play(); }
+        }
+        else if (kahootIndex == 3)
+        {
+            if (kahootVideoObjR4 != null) kahootVideoObjR4.SetActive(true);
+            if (kahootVideoPlayerR4 != null) { kahootVideoPlayerR4.time = 0; kahootVideoPlayerR4.Play(); }
+        }
+    }
+
     // ROUND FLOW
     void LoadCurrentRound()
     {
@@ -260,10 +385,8 @@ public class GameManager : MonoBehaviour
             int kahootIndex = currentRoundIndex; // rounds 1-4 map to 0-3
             currentKahootIndex = kahootIndex;
 
-            // Safety
             if (kahootIndex < 0 || kahootIndex >= kahootRounds.Count)
             {
-                // If setup is missing, skip round
                 canAnswer = false;
                 NextRound();
                 return;
@@ -273,13 +396,12 @@ public class GameManager : MonoBehaviour
 
             emailImage.sprite = data.emailSprite;
 
-            // Show the correct Kahoot panel (1..4)
             ShowKahootPanel(kahootIndex);
 
-            // Audio clip for this Kahoot round
+            PlayKahootVideoForRound(kahootIndex);
+
             PlayKahootStartClip(data.startClip);
 
-            // Auto-wire the 4 buttons for this round
             WireKahootButtons(data);
         }
         else
@@ -295,6 +417,8 @@ public class GameManager : MonoBehaviour
             }
 
             emailImage.sprite = normalRounds[normalIndex].emailSprite;
+
+            HideAllKahootVideos(false);
 
             ShowTwoAnswerPanel();
         }
@@ -326,6 +450,8 @@ public class GameManager : MonoBehaviour
 
     void EndGame()
     {
+        HideAllKahootVideos(false);
+
         gamePanel.SetActive(false);
         endPanel.SetActive(true);
 
