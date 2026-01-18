@@ -2,20 +2,18 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
-using UnityEngine.Video;
+using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
     [Header("Panels")]
     public GameObject startPanel;
-    public GameObject gamePanel;
-    public GameObject endPanel;
-    public GameObject arduinoScript;
-
-    [Header("Intro Pages (before starting game)")]
     public GameObject introPanel;
     public GameObject introPage1;
     public GameObject introPage2;
+    public GameObject gamePanel;
+    public GameObject endPanel;
+    public GameObject arduinoScript;
 
     [Header("Leaderboard")]
     public LeaderboardManager leaderboardManager;
@@ -26,7 +24,7 @@ public class GameManager : MonoBehaviour
     public TMP_Text scoreText;
 
     [Header("Answer Panels (children inside GamePanel)")]
-    public GameObject twoAnswerPanel; // the normal Legit/Phishing panel
+    public GameObject twoAnswerPanel;
     public GameObject kahootRound1Panel;
     public GameObject kahootRound2Panel;
     public GameObject kahootRound3Panel;
@@ -35,28 +33,9 @@ public class GameManager : MonoBehaviour
     [Header("Kahoot Audio")]
     public AudioSource kahootAudioSource;
 
-    [Header("Menu Audio")]
+    [Header("Menu Audio (plays on INTRO panel)")]
     public AudioSource menuAudioSource;
-    public AudioClip menuStartClip; // the sound that plays on the INTRO panel
-
-    [Header("Kahoot Videos (Rounds 1–4)")]
-    public GameObject kahootVideoObjR1; // RawImage that shows video
-    public GameObject kahootVideoObjR2;
-    public GameObject kahootVideoObjR3;
-    public GameObject kahootVideoObjR4;
-
-    public VideoPlayer kahootVideoPlayerR1; // VideoPlayer for round 1
-    public VideoPlayer kahootVideoPlayerR2;
-    public VideoPlayer kahootVideoPlayerR3;
-    public VideoPlayer kahootVideoPlayerR4;
-
-    [Header("Video Placeholders (visible in Scene only)")]
-    public GameObject placeholderR1;
-    public GameObject placeholderR2;
-    public GameObject placeholderR3;
-    public GameObject placeholderR4;
-
-    
+    public AudioClip menuStartClip;
 
     [System.Serializable]
     public class NormalRoundData
@@ -73,37 +52,39 @@ public class GameManager : MonoBehaviour
         [Header("Audio (plays at start of this Kahoot round)")]
         public AudioClip startClip;
 
-        [Header("The 4 buttons for this round")]
-        public Button buttonA;
-        public Button buttonB;
-        public Button buttonC;
-        public Button buttonD;
+        [Header("Button pairs for this round (Normal + Selected)")]
+        public Button buttonA_Normal;
+        public Button buttonA_Selected;
+
+        public Button buttonB_Normal;
+        public Button buttonB_Selected;
+
+        public Button buttonC_Normal;
+        public Button buttonC_Selected;
+
+        public Button buttonD_Normal;
+        public Button buttonD_Selected;
 
         [Header("Correct Answer (ONLY ONE TRUE)")]
-        public bool buttonAIsCorrect;
-        public bool buttonBIsCorrect;
-        public bool buttonCIsCorrect;
-        public bool buttonDIsCorrect;
+        public bool A_IsCorrect;
+        public bool B_IsCorrect;
+        public bool C_IsCorrect;
+        public bool D_IsCorrect;
+
+        //Mascot animator + audio assigned manually
+        [Header("Mascot Feedback (manual clips per round)")]
+        public Animator mascotAnimator; // Character_1 Animator
+        public AudioSource mascotAudioSource; // Character_1 AudioSource
+        public AudioClip correctSfx; // Sound for correct answer (round-specific)
+        public AudioClip wrongSfx; // Sound for wrong answer (round-specific)
 
         public int GetCorrectIndex()
         {
-            if (buttonAIsCorrect) return 0;
-            if (buttonBIsCorrect) return 1;
-            if (buttonCIsCorrect) return 2;
-            if (buttonDIsCorrect) return 3;
-            return -1; // none selected
-        }
-
-        public Button GetButtonByIndex(int idx)
-        {
-            switch (idx)
-            {
-                case 0: return buttonA;
-                case 1: return buttonB;
-                case 2: return buttonC;
-                case 3: return buttonD;
-                default: return null;
-            }
+            if (A_IsCorrect) return 0;
+            if (B_IsCorrect) return 1;
+            if (C_IsCorrect) return 2;
+            if (D_IsCorrect) return 3;
+            return -1;
         }
     }
 
@@ -113,21 +94,25 @@ public class GameManager : MonoBehaviour
     [Header("Rounds 5–10 (Normal)")]
     public List<NormalRoundData> normalRounds = new List<NormalRoundData>();
 
-    private int currentRoundIndex = 0; // 0..9
+    private int currentRoundIndex = 0;
     private float timer;
     private int score;
     private bool canAnswer;
 
-    // holds which Kahoot round is active (0..3)
-    private int currentKahootIndex = -1;
+    private int introPageIndex = 0;
 
-    // Intro pages
-    private int introPageIndex = 0; // NEW (0 = page1, 1 = page2)
+    // selection state for KAHOOT only
+    private Button currentSelectedButton;
+    private Button currentSelectedCorrespondingNormal;
+
+    // lock while mascot feedback is playing
+    private bool waitingForMascotFeedback = false;
+    private Coroutine mascotCoroutine;
 
     void Start()
     {
         startPanel.SetActive(true);
-        if (introPanel != null) introPanel.SetActive(false); // NEW
+        if (introPanel != null) introPanel.SetActive(false);
         gamePanel.SetActive(false);
         endPanel.SetActive(false);
 
@@ -135,15 +120,19 @@ public class GameManager : MonoBehaviour
         score = 0;
 
         HideAllAnswerPanels();
-        HideAllKahootVideos(true); // show placeholders in menu
+        ResetSelectionState();
 
+        waitingForMascotFeedback = false;
+
+        // stop menu audio until intro opens
         if (menuAudioSource != null)
             menuAudioSource.Stop();
     }
 
     void Update()
     {
-        if (!gamePanel.activeSelf || !canAnswer)
+        // block timer while mascot feedback plays
+        if (!gamePanel.activeSelf || !canAnswer || waitingForMascotFeedback)
             return;
 
         timer -= Time.deltaTime;
@@ -160,13 +149,76 @@ public class GameManager : MonoBehaviour
 
     void UpdateTimerUI()
     {
-        int totalSeconds = Mathf.CeilToInt(timer);
-        int minutes = totalSeconds / 60;
-        int seconds = totalSeconds % 60;
-
-        timerText.text = $"{minutes:00}:{seconds:00}";
+        int t = Mathf.CeilToInt(timer);
+        timerText.text = $"{t / 60:00}:{t % 60:00}";
     }
 
+    // KAHOOT SELECTION SYSTEM (Normal -> Selected -> Confirm)
+    void ResetSelectionState()
+    {
+        currentSelectedButton = null;
+        currentSelectedCorrespondingNormal = null;
+    }
+
+    void SelectButtonPair(Button normalBtn, Button selectedBtn)
+    {
+        if (normalBtn == null || selectedBtn == null) return;
+
+        UnselectCurrent();
+
+        SafeSetActive(normalBtn, false);
+        SafeSetActive(selectedBtn, true);
+
+        currentSelectedButton = selectedBtn;
+        currentSelectedCorrespondingNormal = normalBtn;
+    }
+
+    void UnselectCurrent()
+    {
+        if (currentSelectedButton != null && currentSelectedCorrespondingNormal != null)
+        {
+            SafeSetActive(currentSelectedButton, false);
+            SafeSetActive(currentSelectedCorrespondingNormal, true);
+        }
+
+        ResetSelectionState();
+    }
+
+    void SafeSetActive(Button b, bool active)
+    {
+        if (b != null && b.gameObject != null)
+            b.gameObject.SetActive(active);
+    }
+
+    void ClearOnClick(Button b)
+    {
+        if (b == null) return;
+        b.onClick.RemoveAllListeners();
+    }
+
+    void WirePair(Button normalBtn, Button selectedBtn, System.Action onConfirm, bool requireCanAnswer)
+    {
+        if (normalBtn == null || selectedBtn == null) return;
+
+        ClearOnClick(normalBtn);
+        ClearOnClick(selectedBtn);
+
+        // 1st click = select
+        normalBtn.onClick.AddListener(() =>
+        {
+            if (requireCanAnswer && (!canAnswer || waitingForMascotFeedback)) return;
+            SelectButtonPair(normalBtn, selectedBtn);
+        });
+
+        // 2nd click = confirm
+        selectedBtn.onClick.AddListener(() =>
+        {
+            if (requireCanAnswer && (!canAnswer || waitingForMascotFeedback)) return;
+            onConfirm?.Invoke();
+        });
+    }
+
+    // INTRO FLOW
     public void OpenIntro()
     {
         startPanel.SetActive(false);
@@ -189,17 +241,15 @@ public class GameManager : MonoBehaviour
     {
         if (introPageIndex == 0)
         {
-            // back from page 1 -> return to main menu
             if (introPanel != null) introPanel.SetActive(false);
             startPanel.SetActive(true);
 
-            if (menuAudioSource != null && menuAudioSource.isPlaying)
+            if (menuAudioSource != null)
                 menuAudioSource.Stop();
 
             return;
         }
 
-        // page 2 -> page 1
         introPageIndex = 0;
         ShowIntroPage(introPageIndex);
     }
@@ -208,13 +258,11 @@ public class GameManager : MonoBehaviour
     {
         if (introPageIndex == 0)
         {
-            // page 1 -> page 2
             introPageIndex = 1;
             ShowIntroPage(introPageIndex);
             return;
         }
 
-        // page 2 -> start game
         if (introPanel != null) introPanel.SetActive(false);
         StartDigitalGame();
     }
@@ -225,16 +273,17 @@ public class GameManager : MonoBehaviour
         if (introPage2 != null) introPage2.SetActive(idx == 1);
     }
 
+    // GAME START
     public void StartDigitalGame()
     {
-        // Stop menu audio when game starts
-        if (menuAudioSource != null && menuAudioSource.isPlaying)
+        UnselectCurrent();
+        StopMascotFeedbackIfRunning();
+
+        if (menuAudioSource != null)
             menuAudioSource.Stop();
 
-        // if intro is still open, close it
-        if (introPanel != null) introPanel.SetActive(false);
-
         startPanel.SetActive(false);
+        if (introPanel != null) introPanel.SetActive(false);
         gamePanel.SetActive(true);
         endPanel.SetActive(false);
 
@@ -247,181 +296,179 @@ public class GameManager : MonoBehaviour
         LoadCurrentRound();
     }
 
-    // NORMAL BUTTONS (Rounds 5–10)
-    public void ChooseLegit()
+    // NORMAL ROUNDS (one-click)
+    public void ChooseLegit() => CheckNormalAnswer(true);
+    public void ChoosePhishing() => CheckNormalAnswer(false);
+
+    void CheckNormalAnswer(bool choice)
     {
-        if (!canAnswer) return;
-        if (!IsNormalRound()) return;
-
-        CheckNormalAnswer(true);
-    }
-
-    public void ChoosePhishing()
-    {
-        if (!canAnswer) return;
-        if (!IsNormalRound()) return;
-
-        CheckNormalAnswer(false);
-    }
-
-    void CheckNormalAnswer(bool playerChoice)
-    {
+        if (!canAnswer || waitingForMascotFeedback || !IsNormalRound()) return;
         canAnswer = false;
 
-        int normalIndex = currentRoundIndex - 4; // rounds 5-10 map to 0-5
-        if (normalIndex >= 0 && normalIndex < normalRounds.Count)
-        {
-            if (playerChoice == normalRounds[normalIndex].isLegit)
-                score++;
-        }
-
-        NextRound();
-    }
-
-    // KAHOOT BUTTONS (Rounds 1–4)
-    void WireKahootButtons(KahootRoundData data)
-    {
-        ClearButton(data.buttonA);
-        ClearButton(data.buttonB);
-        ClearButton(data.buttonC);
-        ClearButton(data.buttonD);
-
-        int correct = data.GetCorrectIndex();
-
-        AddKahootListener(data.buttonA, correct == 0);
-        AddKahootListener(data.buttonB, correct == 1);
-        AddKahootListener(data.buttonC, correct == 2);
-        AddKahootListener(data.buttonD, correct == 3);
-    }
-
-    void AddKahootListener(Button b, bool isCorrect)
-    {
-        if (b == null) return;
-        b.onClick.AddListener(() => KahootAnswer(isCorrect));
-    }
-
-    void ClearButton(Button b)
-    {
-        if (b == null) return;
-        b.onClick.RemoveAllListeners();
-    }
-
-    void KahootAnswer(bool isCorrect)
-    {
-        if (!canAnswer) return;
-        if (!IsKahootRound()) return;
-
-        canAnswer = false;
-
-        if (isCorrect)
+        int idx = currentRoundIndex - 4;
+        if (idx >= 0 && idx < normalRounds.Count && choice == normalRounds[idx].isLegit)
             score++;
 
         NextRound();
     }
 
-    // AUDIO
+    // KAHOOT (two-click: select then confirm)
+    void WireKahootButtons(KahootRoundData data)
+    {
+        ForceKahootPairDefaults(data);
+
+        int correct = data.GetCorrectIndex();
+
+        WirePair(data.buttonA_Normal, data.buttonA_Selected, () => KahootAnswer(correct == 0), true);
+        WirePair(data.buttonB_Normal, data.buttonB_Selected, () => KahootAnswer(correct == 1), true);
+        WirePair(data.buttonC_Normal, data.buttonC_Selected, () => KahootAnswer(correct == 2), true);
+        WirePair(data.buttonD_Normal, data.buttonD_Selected, () => KahootAnswer(correct == 3), true);
+    }
+
+    void ForceKahootPairDefaults(KahootRoundData d)
+    {
+        SafeSetActive(d.buttonA_Normal, true);
+        SafeSetActive(d.buttonB_Normal, true);
+        SafeSetActive(d.buttonC_Normal, true);
+        SafeSetActive(d.buttonD_Normal, true);
+
+        SafeSetActive(d.buttonA_Selected, false);
+        SafeSetActive(d.buttonB_Selected, false);
+        SafeSetActive(d.buttonC_Selected, false);
+        SafeSetActive(d.buttonD_Selected, false);
+
+        UnselectCurrent();
+    }
+
+    void KahootAnswer(bool correct)
+    {
+        if (!canAnswer || waitingForMascotFeedback || !IsKahootRound()) return;
+
+        canAnswer = false;
+        waitingForMascotFeedback = true;
+
+        if (correct) score++;
+
+        // remove selection visuals immediately
+        UnselectCurrent();
+
+        // play mascot correct/wrong animation + audio, then advance
+        StopMascotFeedbackIfRunning();
+        mascotCoroutine = StartCoroutine(PlayMascotFeedbackThenNext(correct));
+    }
+
+    IEnumerator PlayMascotFeedbackThenNext(bool wasCorrect)
+    {
+        KahootRoundData data = GetCurrentKahootData();
+
+        // If missing setup, just go next safely
+        if (data == null)
+        {
+            waitingForMascotFeedback = false;
+            NextRound();
+            yield break;
+        }
+
+        // trigger animator state
+        if (data.mascotAnimator != null)
+        {
+            data.mascotAnimator.SetBool("Correct", false);
+            data.mascotAnimator.SetBool("Wrong", false);
+
+            data.mascotAnimator.SetBool("Correct", wasCorrect);
+            data.mascotAnimator.SetBool("Wrong", !wasCorrect);
+        }
+
+        // play audio clip manually
+        float waitTime = 0f;
+        AudioClip clip = wasCorrect ? data.correctSfx : data.wrongSfx;
+
+        if (data.mascotAudioSource != null && clip != null)
+        {
+            data.mascotAudioSource.Stop();
+            data.mascotAudioSource.clip = clip;
+            data.mascotAudioSource.Play();
+            waitTime = clip.length;
+        }
+
+        // Wait for audio to finish (or 0 if missing)
+        if (waitTime > 0f)
+            yield return new WaitForSeconds(waitTime);
+        else
+            yield return null;
+
+        // reset animator bools for clean next use
+        if (data.mascotAnimator != null)
+        {
+            data.mascotAnimator.SetBool("Correct", false);
+            data.mascotAnimator.SetBool("Wrong", false);
+        }
+
+        waitingForMascotFeedback = false;
+        NextRound();
+    }
+
+    void StopMascotFeedbackIfRunning()
+    {
+        waitingForMascotFeedback = false;
+
+        if (mascotCoroutine != null)
+        {
+            StopCoroutine(mascotCoroutine);
+            mascotCoroutine = null;
+        }
+
+        // also stop any mascot audio currently playing
+        KahootRoundData data = GetCurrentKahootData();
+        if (data != null && data.mascotAudioSource != null)
+            data.mascotAudioSource.Stop();
+    }
+
+    KahootRoundData GetCurrentKahootData()
+    {
+        if (currentRoundIndex < 0 || currentRoundIndex >= kahootRounds.Count) return null;
+        return kahootRounds[currentRoundIndex];
+    }
+
+    // AUDIO (round start clip)
     void PlayKahootStartClip(AudioClip clip)
     {
-        if (kahootAudioSource == null) return;
-        if (clip == null) return;
-
+        if (kahootAudioSource == null || clip == null) return;
         kahootAudioSource.Stop();
         kahootAudioSource.clip = clip;
         kahootAudioSource.Play();
     }
 
-    // VIDEO HELPERS
-    void HideAllKahootVideos(bool showPlaceholders)
-    {
-        if (kahootVideoObjR1 != null) kahootVideoObjR1.SetActive(false);
-        if (kahootVideoObjR2 != null) kahootVideoObjR2.SetActive(false);
-        if (kahootVideoObjR3 != null) kahootVideoObjR3.SetActive(false);
-        if (kahootVideoObjR4 != null) kahootVideoObjR4.SetActive(false);
-
-        if (kahootVideoPlayerR1 != null) kahootVideoPlayerR1.Stop();
-        if (kahootVideoPlayerR2 != null) kahootVideoPlayerR2.Stop();
-        if (kahootVideoPlayerR3 != null) kahootVideoPlayerR3.Stop();
-        if (kahootVideoPlayerR4 != null) kahootVideoPlayerR4.Stop();
-
-        if (placeholderR1 != null) placeholderR1.SetActive(showPlaceholders);
-        if (placeholderR2 != null) placeholderR2.SetActive(showPlaceholders);
-        if (placeholderR3 != null) placeholderR3.SetActive(showPlaceholders);
-        if (placeholderR4 != null) placeholderR4.SetActive(showPlaceholders);
-    }
-
-    void PlayKahootVideoForRound(int kahootIndex) // 0..3
-    {
-        HideAllKahootVideos(false);
-
-        if (kahootIndex == 0)
-        {
-            if (kahootVideoObjR1 != null) kahootVideoObjR1.SetActive(true);
-            if (kahootVideoPlayerR1 != null) { kahootVideoPlayerR1.time = 0; kahootVideoPlayerR1.Play(); }
-        }
-        else if (kahootIndex == 1)
-        {
-            if (kahootVideoObjR2 != null) kahootVideoObjR2.SetActive(true);
-            if (kahootVideoPlayerR2 != null) { kahootVideoPlayerR2.time = 0; kahootVideoPlayerR2.Play(); }
-        }
-        else if (kahootIndex == 2)
-        {
-            if (kahootVideoObjR3 != null) kahootVideoObjR3.SetActive(true);
-            if (kahootVideoPlayerR3 != null) { kahootVideoPlayerR3.time = 0; kahootVideoPlayerR3.Play(); }
-        }
-        else if (kahootIndex == 3)
-        {
-            if (kahootVideoObjR4 != null) kahootVideoObjR4.SetActive(true);
-            if (kahootVideoPlayerR4 != null) { kahootVideoPlayerR4.time = 0; kahootVideoPlayerR4.Play(); }
-        }
-    }
-
     // ROUND FLOW
     void LoadCurrentRound()
     {
+        UnselectCurrent();
+        StopMascotFeedbackIfRunning();
+
         timer = 20f;
         canAnswer = true;
         UpdateTimerUI();
 
         if (IsKahootRound())
         {
-            int kahootIndex = currentRoundIndex; // rounds 1-4 map to 0-3
-            currentKahootIndex = kahootIndex;
-
-            if (kahootIndex < 0 || kahootIndex >= kahootRounds.Count)
-            {
-                canAnswer = false;
-                NextRound();
-                return;
-            }
-
-            KahootRoundData data = kahootRounds[kahootIndex];
-
+            KahootRoundData data = kahootRounds[currentRoundIndex];
             emailImage.sprite = data.emailSprite;
 
-            ShowKahootPanel(kahootIndex);
-
-            PlayKahootVideoForRound(kahootIndex);
-
+            ShowKahootPanel(currentRoundIndex);
             PlayKahootStartClip(data.startClip);
-
             WireKahootButtons(data);
+
+            // start clean
+            if (data.mascotAnimator != null)
+            {
+                data.mascotAnimator.SetBool("Correct", false);
+                data.mascotAnimator.SetBool("Wrong", false);
+            }
         }
         else
         {
-            currentKahootIndex = -1;
-
-            int normalIndex = currentRoundIndex - 4; // rounds 5-10 map to 0-5
-            if (normalIndex < 0 || normalIndex >= normalRounds.Count)
-            {
-                canAnswer = false;
-                NextRound();
-                return;
-            }
-
-            emailImage.sprite = normalRounds[normalIndex].emailSprite;
-
-            HideAllKahootVideos(false);
-
+            int idx = currentRoundIndex - 4;
+            emailImage.sprite = normalRounds[idx].emailSprite;
             ShowTwoAnswerPanel();
         }
     }
@@ -429,41 +476,27 @@ public class GameManager : MonoBehaviour
     void NextRound()
     {
         currentRoundIndex++;
-
-        if (currentRoundIndex >= 10) // total rounds = 10
-        {
-            EndGame();
-        }
-        else
-        {
-            LoadCurrentRound();
-        }
+        if (currentRoundIndex >= 10) EndGame();
+        else LoadCurrentRound();
     }
 
-    bool IsKahootRound()
-    {
-        return currentRoundIndex >= 0 && currentRoundIndex <= 3; // rounds 1-4
-    }
-
-    bool IsNormalRound()
-    {
-        return currentRoundIndex >= 4 && currentRoundIndex <= 9; // rounds 5-10
-    }
+    bool IsKahootRound() => currentRoundIndex <= 3;
+    bool IsNormalRound() => currentRoundIndex >= 4;
 
     void EndGame()
     {
-        HideAllKahootVideos(false);
+        UnselectCurrent();
+        StopMascotFeedbackIfRunning();
 
         gamePanel.SetActive(false);
         endPanel.SetActive(true);
-
         scoreText.text = score + "/10";
 
         if (leaderboardManager != null)
             leaderboardManager.AddResult(score);
     }
 
-    // PANEL SHOW/HIDE HELPERS
+    // UI HELPERS
     void HideAllAnswerPanels()
     {
         if (twoAnswerPanel != null) twoAnswerPanel.SetActive(false);
@@ -479,13 +512,12 @@ public class GameManager : MonoBehaviour
         if (twoAnswerPanel != null) twoAnswerPanel.SetActive(true);
     }
 
-    void ShowKahootPanel(int kahootIndex) // 0..3
+    void ShowKahootPanel(int idx)
     {
         HideAllAnswerPanels();
-
-        if (kahootIndex == 0 && kahootRound1Panel != null) kahootRound1Panel.SetActive(true);
-        if (kahootIndex == 1 && kahootRound2Panel != null) kahootRound2Panel.SetActive(true);
-        if (kahootIndex == 2 && kahootRound3Panel != null) kahootRound3Panel.SetActive(true);
-        if (kahootIndex == 3 && kahootRound4Panel != null) kahootRound4Panel.SetActive(true);
+        if (idx == 0 && kahootRound1Panel != null) kahootRound1Panel.SetActive(true);
+        if (idx == 1 && kahootRound2Panel != null) kahootRound2Panel.SetActive(true);
+        if (idx == 2 && kahootRound3Panel != null) kahootRound3Panel.SetActive(true);
+        if (idx == 3 && kahootRound4Panel != null) kahootRound4Panel.SetActive(true);
     }
 }
