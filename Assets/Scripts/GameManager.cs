@@ -56,6 +56,8 @@ public class GameManager : MonoBehaviour
     public GameObject placeholderR3;
     public GameObject placeholderR4;
 
+    
+
     [System.Serializable]
     public class NormalRoundData
     {
