@@ -5006,7 +5006,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &689210124
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9368,7 +9368,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1398119370
 RectTransform:
   m_ObjectHideFlags: 0
@@ -11943,7 +11943,7 @@ MonoBehaviour:
   kahootRound4Panel: {fileID: 695411792}
   kahootAudioSource: {fileID: 441630160}
   menuAudioSource: {fileID: 1616805311}
-  menuStartClip: {fileID: 8300000, guid: bb9d0e1fa7ce12f4c8477aabc1fa19f1, type: 3}
+  menuStartClip: {fileID: 8300000, guid: a8c53fc09b6fcc54cb3be0fb077faed6, type: 3}
   kahootRounds:
   - emailSprite: {fileID: 21300000, guid: 24021e7a325ce2547943cf24c87c1c8c, type: 3}
     startClip: {fileID: 8300000, guid: e5358d64e4dcd054ead79dfb099328d7, type: 3}
