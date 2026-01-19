@@ -10,6 +10,11 @@ public class ArduinoKahootTwoButton : MonoBehaviour
     public GameObject kahootRound3Panel; // Round 3 panel
     public GameObject kahootRound4Panel; // Round 4 panel
 
+    [Header("Normal Round Panel + Buttons")]
+    public GameObject twoAnswerPanel; // The panel used for rounds after Kahoot (Legit/Phishing)
+    public Button legitButton; // Button that triggers the same thing as clicking "Legit"
+    public Button phishingButton; // Button that triggers the same thing as clicking "Phishing"
+
     [Header("Serial")]
     public string comPort = "COM8"; // Arduino COM port
     public int baudRate = 9600; // Arduino Serial.begin
@@ -59,13 +64,17 @@ public class ArduinoKahootTwoButton : MonoBehaviour
             {
                 if (Time.time - lastBTN1Time < debounceSeconds) return; // Debounce
                 lastBTN1Time = Time.time; // Save time of press
-                HandleGood(); // BTN1 controls GOOD
+
+                if (IsKahootActive()) HandleGood(); // BTN1 controls GOOD
+                else if (IsNormalActive()) HandleLegit(); // BTN1 controls LEGIT
             }
             else if (data == "BTN2") // Physical button 2
             {
                 if (Time.time - lastBTN2Time < debounceSeconds) return; // Debounce
                 lastBTN2Time = Time.time; // Save time of press
-                HandleWrong(); // BTN2 controls WRONG
+
+                if (IsKahootActive()) HandleWrong(); // BTN2 controls WRONG
+                else if (IsNormalActive()) HandlePhishing(); // BTN2 controls PHISHING
             }
         }
         catch
@@ -121,6 +130,32 @@ public class ArduinoKahootTwoButton : MonoBehaviour
         Debug.LogWarning("GOOD buttons not found or not active in this Kahoot panel.");
     }
 
+    void HandleLegit()
+    {
+        if (!IsNormalActive()) return; // Only react when the normal (two answer) panel is active
+
+        if (legitButton != null)
+        {
+            legitButton.onClick.Invoke(); // Click the Legit button
+            return;
+        }
+
+        Debug.LogWarning("Legit button is not assigned in the Inspector.");
+    }
+
+    void HandlePhishing()
+    {
+        if (!IsNormalActive()) return; // Only react when the normal (two answer) panel is active
+
+        if (phishingButton != null)
+        {
+            phishingButton.onClick.Invoke(); // Click the Phishing button
+            return;
+        }
+
+        Debug.LogWarning("Phishing button is not assigned in the Inspector.");
+    }
+
     bool IsKahootActive()
     {
         // Kahoot is active if ANY round panel is active 
@@ -129,8 +164,15 @@ public class ArduinoKahootTwoButton : MonoBehaviour
         if (kahootRound3Panel != null && kahootRound3Panel.activeInHierarchy) return true;
         if (kahootRound4Panel != null && kahootRound4Panel.activeInHierarchy) return true;
 
-        // If not, assume you always want it active.
-        return true;
+        return false; // Not Kahoot right now
+    }
+
+    bool IsNormalActive()
+    {
+        // Normal rounds are active if the twoAnswerPanel is active
+        if (twoAnswerPanel != null) return twoAnswerPanel.activeInHierarchy;
+
+        return false; // Not normal rounds right now
     }
 
     Button FindButtonByName(string exactName)

@@ -7460,6 +7460,9 @@ MonoBehaviour:
   kahootRound2Panel: {fileID: 1829842781}
   kahootRound3Panel: {fileID: 1222148683}
   kahootRound4Panel: {fileID: 695411792}
+  twoAnswerPanel: {fileID: 1333271392}
+  legitButton: {fileID: 1687710360}
+  phishingButton: {fileID: 14900158}
   comPort: COM8
   baudRate: 9600
   debounceSeconds: 0.2
