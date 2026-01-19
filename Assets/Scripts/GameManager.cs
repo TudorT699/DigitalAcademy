@@ -6,14 +6,36 @@ using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
+    // input choice (so you know what is picked)
+    public enum InputMode { Digital, Physical, Phone }
+
     [Header("Panels")]
-    public GameObject startPanel;
+    public GameObject startPanel; // MAIN MENU PANEL (Start Game / Settings / Quit)
     public GameObject introPanel;
     public GameObject introPage1;
     public GameObject introPage2;
     public GameObject gamePanel;
     public GameObject endPanel;
     public GameObject arduinoScript;
+
+    // extra menu pages
+    [Header("Start Flow Pages")]
+    public GameObject chooseButtonsPanel; // Digital Buttons / Physical Buttons / PhoneButtons
+    public GameObject usernamePanel; // Username input + confirm
+    public GameObject settingsPanel; // Settings page with back button
+
+    // username UI
+    [Header("Username UI")]
+    public TMP_InputField usernameInput;
+    public TMP_Text usernameErrorText; // optional, can be null
+
+    // phone buttons script object (set active when Phone is chosen)
+    [Header("Optional Input Scripts")]
+    public GameObject phoneButtonsScript;
+
+    // state
+    private InputMode selectedInputMode = InputMode.Digital;
+    private string playerUsername = "";
 
     [Header("Leaderboard")]
     public LeaderboardManager leaderboardManager;
@@ -111,7 +133,14 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        // MAIN MENU ON START
         startPanel.SetActive(true);
+
+        // extra pages are hidden at start
+        if (chooseButtonsPanel != null) chooseButtonsPanel.SetActive(false);
+        if (usernamePanel != null) usernamePanel.SetActive(false);
+        if (settingsPanel != null) settingsPanel.SetActive(false);
+
         if (introPanel != null) introPanel.SetActive(false);
         gamePanel.SetActive(false);
         endPanel.SetActive(false);
@@ -123,6 +152,12 @@ public class GameManager : MonoBehaviour
         ResetSelectionState();
 
         waitingForMascotFeedback = false;
+
+        // default input scripts off until player picks a mode
+        ApplyInputMode(InputMode.Digital);
+
+        // clear error text if used
+        if (usernameErrorText != null) usernameErrorText.text = "";
 
         // stop menu audio until intro opens
         if (menuAudioSource != null)
@@ -151,6 +186,139 @@ public class GameManager : MonoBehaviour
     {
         int t = Mathf.CeilToInt(timer);
         timerText.text = $"{t / 60:00}:{t % 60:00}";
+    }
+
+    // MAIN MENU BUTTONS
+    public void OnClickStartGameButton()
+    {
+        startPanel.SetActive(false);
+        if (settingsPanel != null) settingsPanel.SetActive(false);
+
+        if (chooseButtonsPanel != null) chooseButtonsPanel.SetActive(true);
+        if (usernamePanel != null) usernamePanel.SetActive(false);
+
+        if (introPanel != null) introPanel.SetActive(false);
+        gamePanel.SetActive(false);
+        endPanel.SetActive(false);
+
+        if (usernameErrorText != null) usernameErrorText.text = "";
+    }
+
+    public void OnClickSettingsButton()
+    {
+        startPanel.SetActive(false);
+
+        if (chooseButtonsPanel != null) chooseButtonsPanel.SetActive(false);
+        if (usernamePanel != null) usernamePanel.SetActive(false);
+
+        if (settingsPanel != null) settingsPanel.SetActive(true);
+
+        if (introPanel != null) introPanel.SetActive(false);
+        gamePanel.SetActive(false);
+        endPanel.SetActive(false);
+    }
+
+    public void OnClickQuitButton()
+    {
+        Application.Quit();
+
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#endif
+    }
+
+    // SETTINGS BACK BUTTON
+    public void OnClickSettingsBackButton()
+    {
+        if (settingsPanel != null) settingsPanel.SetActive(false);
+        startPanel.SetActive(true);
+    }
+
+    // CHOOSE INPUT BUTTONS PAGE
+    public void ChooseDigitalButtons()
+    {
+        selectedInputMode = InputMode.Digital;
+        GoToUsernamePage();
+    }
+
+    public void ChoosePhysicalButtons()
+    {
+        selectedInputMode = InputMode.Physical;
+        GoToUsernamePage();
+    }
+
+    public void ChoosePhoneButtons()
+    {
+        selectedInputMode = InputMode.Phone;
+        GoToUsernamePage();
+    }
+
+    // BACK from choose buttons page to main menu
+    public void OnClickChooseButtonsBackToMenu()
+    {
+        if (chooseButtonsPanel != null) chooseButtonsPanel.SetActive(false);
+        startPanel.SetActive(true);
+    }
+
+    // username page navigation
+    void GoToUsernamePage()
+    {
+        if (chooseButtonsPanel != null) chooseButtonsPanel.SetActive(false);
+        if (usernamePanel != null) usernamePanel.SetActive(true);
+
+        if (usernameInput != null) usernameInput.text = "";
+        if (usernameErrorText != null) usernameErrorText.text = "";
+    }
+
+    public void OnClickUsernameBackToChooseButtons()
+    {
+        if (usernamePanel != null) usernamePanel.SetActive(false);
+        if (chooseButtonsPanel != null) chooseButtonsPanel.SetActive(true);
+
+        if (usernameErrorText != null) usernameErrorText.text = "";
+    }
+
+    // confirm username -> intro
+    public void OnClickConfirmUsername()
+    {
+        string entered = (usernameInput != null) ? usernameInput.text : "";
+        entered = entered.Trim();
+
+        if (string.IsNullOrEmpty(entered))
+        {
+            if (usernameErrorText != null) usernameErrorText.text = "Please enter a username.";
+            return;
+        }
+
+        playerUsername = entered;
+
+        // Save username for leaderboard to use 
+        PlayerPrefs.SetString("PLAYER_USERNAME", playerUsername);
+        PlayerPrefs.SetInt("INPUT_MODE", (int)selectedInputMode);
+        PlayerPrefs.Save();
+
+        ApplyInputMode(selectedInputMode);
+
+        if (usernamePanel != null) usernamePanel.SetActive(false);
+
+        OpenIntro(); // goes to intro panel, then IntroNext starts game
+    }
+
+    // enable/disable input scripts based on mode
+    void ApplyInputMode(InputMode mode)
+    {
+        // Arduino input only active for Physical
+        if (arduinoScript != null) arduinoScript.SetActive(mode == InputMode.Physical);
+
+        // phone buttons object
+        if (phoneButtonsScript != null) phoneButtonsScript.SetActive(mode == InputMode.Phone);
+
+        // Digital = both off
+        if (mode == InputMode.Digital)
+        {
+            if (arduinoScript != null) arduinoScript.SetActive(false);
+            if (phoneButtonsScript != null) phoneButtonsScript.SetActive(false);
+        }
     }
 
     // KAHOOT SELECTION SYSTEM (Normal -> Selected -> Confirm)
@@ -221,6 +389,11 @@ public class GameManager : MonoBehaviour
     // INTRO FLOW
     public void OpenIntro()
     {
+        // ensure menu pages are hidden
+        if (chooseButtonsPanel != null) chooseButtonsPanel.SetActive(false);
+        if (usernamePanel != null) usernamePanel.SetActive(false);
+        if (settingsPanel != null) settingsPanel.SetActive(false);
+
         startPanel.SetActive(false);
         if (introPanel != null) introPanel.SetActive(true);
         gamePanel.SetActive(false);
@@ -242,7 +415,13 @@ public class GameManager : MonoBehaviour
         if (introPageIndex == 0)
         {
             if (introPanel != null) introPanel.SetActive(false);
+
+            // go back to main menu (not old start screen)
             startPanel.SetActive(true);
+
+            if (chooseButtonsPanel != null) chooseButtonsPanel.SetActive(false);
+            if (usernamePanel != null) usernamePanel.SetActive(false);
+            if (settingsPanel != null) settingsPanel.SetActive(false);
 
             if (menuAudioSource != null)
                 menuAudioSource.Stop();
@@ -290,8 +469,6 @@ public class GameManager : MonoBehaviour
         score = 0;
         currentRoundIndex = 0;
 
-        if (arduinoScript != null)
-            arduinoScript.SetActive(true);
 
         LoadCurrentRound();
     }
@@ -473,7 +650,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void NextRound() 
+    void NextRound()
     {
         currentRoundIndex++; // this is the actual switch
         if (currentRoundIndex >= 10) EndGame();
