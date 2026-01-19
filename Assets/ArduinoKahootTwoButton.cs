@@ -59,13 +59,13 @@ public class ArduinoKahootTwoButton : MonoBehaviour
             {
                 if (Time.time - lastBTN1Time < debounceSeconds) return; // Debounce
                 lastBTN1Time = Time.time; // Save time of press
-                HandleGood(); // UPDATED: BTN1 controls GOOD
+                HandleGood(); // BTN1 controls GOOD
             }
             else if (data == "BTN2") // Physical button 2
             {
                 if (Time.time - lastBTN2Time < debounceSeconds) return; // Debounce
                 lastBTN2Time = Time.time; // Save time of press
-                HandleWrong(); // UPDATED: BTN2 controls WRONG
+                HandleWrong(); // BTN2 controls WRONG
             }
         }
         catch

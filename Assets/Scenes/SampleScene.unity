@@ -10225,7 +10225,7 @@ MonoBehaviour:
   menuStartClip: {fileID: 8300000, guid: bb9d0e1fa7ce12f4c8477aabc1fa19f1, type: 3}
   kahootRounds:
   - emailSprite: {fileID: 21300000, guid: 24021e7a325ce2547943cf24c87c1c8c, type: 3}
-    startClip: {fileID: 8300000, guid: dee3114b23ae7c64b96fc69cd614c45a, type: 3}
+    startClip: {fileID: 8300000, guid: e5358d64e4dcd054ead79dfb099328d7, type: 3}
     buttonA_Normal: {fileID: 1281716492}
     buttonA_Selected: {fileID: 755065907}
     buttonB_Normal: {fileID: 1426667892}
@@ -10243,7 +10243,7 @@ MonoBehaviour:
     correctSfx: {fileID: 8300000, guid: 3062782bd0f6df94384b08e307296efd, type: 3}
     wrongSfx: {fileID: 8300000, guid: 8d37804797687f245ae76c1748edde23, type: 3}
   - emailSprite: {fileID: 21300000, guid: 07b35b345bafde943a3723d743d96627, type: 3}
-    startClip: {fileID: 8300000, guid: db58e2a115f2a5541afa393c11a41e71, type: 3}
+    startClip: {fileID: 8300000, guid: fc3445a33738cf847b02d7c4cff9fa02, type: 3}
     buttonA_Normal: {fileID: 1767196852}
     buttonA_Selected: {fileID: 2099154876}
     buttonB_Normal: {fileID: 1434967346}
@@ -10261,7 +10261,7 @@ MonoBehaviour:
     correctSfx: {fileID: 8300000, guid: 3062782bd0f6df94384b08e307296efd, type: 3}
     wrongSfx: {fileID: 8300000, guid: 8d37804797687f245ae76c1748edde23, type: 3}
   - emailSprite: {fileID: 21300000, guid: 869928f1391f8de46b915ac41b82a948, type: 3}
-    startClip: {fileID: 8300000, guid: 7d7db27195bf63a4c94b490252256a55, type: 3}
+    startClip: {fileID: 8300000, guid: f05f77f26ad74f346a0301c9fad1942b, type: 3}
     buttonA_Normal: {fileID: 1318486939}
     buttonA_Selected: {fileID: 849239939}
     buttonB_Normal: {fileID: 1902386494}
@@ -10279,7 +10279,7 @@ MonoBehaviour:
     correctSfx: {fileID: 8300000, guid: 3062782bd0f6df94384b08e307296efd, type: 3}
     wrongSfx: {fileID: 8300000, guid: 8d37804797687f245ae76c1748edde23, type: 3}
   - emailSprite: {fileID: 21300000, guid: c4d13af5bfb85fa4bb6db618b02eb2c0, type: 3}
-    startClip: {fileID: 8300000, guid: b28a47bfd19ab5b469527d7381996dd3, type: 3}
+    startClip: {fileID: 8300000, guid: 6ce56c4eeebe77347919303790142716, type: 3}
     buttonA_Normal: {fileID: 2134183759}
     buttonA_Selected: {fileID: 1207179691}
     buttonB_Normal: {fileID: 301663285}
