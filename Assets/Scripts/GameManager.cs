@@ -143,7 +143,7 @@ public class GameManager : MonoBehaviour
         if (timer <= 0f)
         {
             canAnswer = false;
-            NextRound();
+            NextRound(); // question switch on timeout
         }
     }
 
@@ -365,7 +365,7 @@ public class GameManager : MonoBehaviour
         if (data == null)
         {
             waitingForMascotFeedback = false;
-            NextRound();
+            NextRound(); // (question switch after confirmation), happens after mascot animation + audio finishes
             yield break;
         }
 
@@ -445,7 +445,7 @@ public class GameManager : MonoBehaviour
         UnselectCurrent();
         StopMascotFeedbackIfRunning();
 
-        timer = 20f;
+        timer = 90f;
         canAnswer = true;
         UpdateTimerUI();
 
@@ -473,9 +473,9 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void NextRound()
+    void NextRound() 
     {
-        currentRoundIndex++;
+        currentRoundIndex++; // this is the actual switch
         if (currentRoundIndex >= 10) EndGame();
         else LoadCurrentRound();
     }

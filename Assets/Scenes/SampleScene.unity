@@ -7427,6 +7427,57 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1281716490}
   m_CullTransparentMesh: 1
+--- !u!1 &1299340317
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1299340319}
+  - component: {fileID: 1299340318}
+  m_Layer: 0
+  m_Name: ArduinoKahootController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1299340318
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299340317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6c260d98dda1284f99858e73901ad49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  kahootRound1Panel: {fileID: 1395026655}
+  kahootRound2Panel: {fileID: 1829842781}
+  kahootRound3Panel: {fileID: 1222148683}
+  kahootRound4Panel: {fileID: 695411792}
+  comPort: COM8
+  baudRate: 9600
+  debounceSeconds: 0.2
+--- !u!4 &1299340319
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299340317}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 796.3386, y: 401.88715, z: 5.316371}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1318486937
 GameObject:
   m_ObjectHideFlags: 0
@@ -9428,63 +9479,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1601932078}
   m_CullTransparentMesh: 1
---- !u!1 &1614464087
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1614464089}
-  - component: {fileID: 1614464088}
-  m_Layer: 0
-  m_Name: SerialButtonManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1614464088
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1614464087}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ebe25d2816114c04b89c281d42bfd283, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  button1: {fileID: 14900158}
-  button2: {fileID: 1687710360}
-  buttonIntro: {fileID: 1787302753}
-  buttonIntro2: {fileID: 1442241149}
-  Question1_1: {fileID: 1281716492}
-  Question1_1_selected: {fileID: 755065907}
-  Question1_2: {fileID: 1426667892}
-  Question1_2_selected: {fileID: 1882693702}
-  Answer1: {fileID: 1281716490}
-  Answer2: {fileID: 1426667890}
-  IntroPanel: {fileID: 1320565442}
-  QuestionPanel1: {fileID: 1395026655}
-  QuestionPanel2: {fileID: 1829842781}
---- !u!4 &1614464089
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1614464087}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1616805310
 GameObject:
   m_ObjectHideFlags: 0
@@ -10216,7 +10210,7 @@ MonoBehaviour:
   introPage2: {fileID: 664150188}
   gamePanel: {fileID: 531790966}
   endPanel: {fileID: 689210123}
-  arduinoScript: {fileID: 0}
+  arduinoScript: {fileID: 1299340317}
   leaderboardManager: {fileID: 384082791}
   emailImage: {fileID: 1221762243}
   timerText: {fileID: 2119834472}
@@ -13912,7 +13906,7 @@ SceneRoots:
   - {fileID: 421278212}
   - {fileID: 67504950}
   - {fileID: 1695746701}
-  - {fileID: 1614464089}
   - {fileID: 384082790}
   - {fileID: 441630161}
   - {fileID: 1616805312}
+  - {fileID: 1299340319}
