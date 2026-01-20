@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: c1071d7df5cef0d41854f811c30a5d37
+guid: d834f99bdfe4adf4c9189d8d97f2d6a6
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8082319834400328399
-    second: InputMethodBackground_0
+      213: -1706526511627053578
+    second: My_QR_Code_1-1024_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: InputMethodBackground_0
+      name: My_QR_Code_1-1024_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 1920
-        height: 1080
+        width: 1024
+        height: 1024
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 135797dbee4d5df80800000000000000
-      internalID: -8082319834400328399
+      spriteID: 6f5dea2ed233158e0800000000000000
+      internalID: -1706526511627053578
       vertices: []
       indices: 
       edges: []
@@ -125,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      InputMethodBackground_0: -8082319834400328399
+      My_QR_Code_1-1024_0: -1706526511627053578
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
