@@ -5838,7 +5838,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1695746700}
         m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: IntroBack
+        m_MethodName: IntroNext
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -12204,7 +12204,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1695746700}
         m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: IntroBack
+        m_MethodName: IntroNext
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -15036,7 +15036,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1695746700}
         m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: IntroNext
+        m_MethodName: IntroBack
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -15787,7 +15787,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1695746700}
         m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: IntroNext
+        m_MethodName: IntroBack
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
