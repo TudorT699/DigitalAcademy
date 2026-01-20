@@ -27,7 +27,7 @@ public class GameManager : MonoBehaviour
     // username UI
     [Header("Username UI")]
     public TMP_InputField usernameInput;
-    public TMP_Text usernameErrorText; // optional, can be null
+    public TMP_Text usernameErrorText;
 
     // phone buttons script object (set active when Phone is chosen)
     [Header("Optional Input Scripts")]
@@ -58,6 +58,12 @@ public class GameManager : MonoBehaviour
     [Header("Menu Audio (plays on INTRO panel)")]
     public AudioSource menuAudioSource;
     public AudioClip menuStartClip;
+
+    // Round transition + end sounds
+    [Header("Game Sounds")]
+    public AudioSource gameSfxAudioSource;
+    public AudioClip reachedRound5Clip; // Plays when Round 5 starts
+    public AudioClip endPanelClip; // Plays when EndPanel shows
 
     [System.Serializable]
     public class NormalRoundData
@@ -93,7 +99,7 @@ public class GameManager : MonoBehaviour
         public bool C_IsCorrect;
         public bool D_IsCorrect;
 
-        //Mascot animator + audio assigned manually
+        // Mascot animator + audio assigned manually
         [Header("Mascot Feedback (manual clips per round)")]
         public Animator mascotAnimator; // Character_1 Animator
         public AudioSource mascotAudioSource; // Character_1 AudioSource
@@ -130,6 +136,9 @@ public class GameManager : MonoBehaviour
     // lock while mascot feedback is playing
     private bool waitingForMascotFeedback = false;
     private Coroutine mascotCoroutine;
+
+    // ensures the round 5 sound plays only once
+    private bool playedRound5Sound = false;
 
     void Start()
     {
@@ -416,7 +425,7 @@ public class GameManager : MonoBehaviour
         {
             if (introPanel != null) introPanel.SetActive(false);
 
-            // go back to main menu (not old start screen)
+            // go back to main menu
             startPanel.SetActive(true);
 
             if (chooseButtonsPanel != null) chooseButtonsPanel.SetActive(false);
@@ -469,6 +478,8 @@ public class GameManager : MonoBehaviour
         score = 0;
         currentRoundIndex = 0;
 
+        // reset this every time a new game starts
+        playedRound5Sound = false;
 
         LoadCurrentRound();
     }
@@ -616,15 +627,30 @@ public class GameManager : MonoBehaviour
         kahootAudioSource.Play();
     }
 
+    void PlayGameSfx(AudioClip clip)
+    {
+        if (gameSfxAudioSource == null) return;
+        if (clip == null) return;
+
+        gameSfxAudioSource.PlayOneShot(clip);
+    }
+
     // ROUND FLOW
     void LoadCurrentRound()
     {
         UnselectCurrent();
         StopMascotFeedbackIfRunning();
 
-        timer = 90f;
+        timer = 90000f;
         canAnswer = true;
         UpdateTimerUI();
+
+        // round 5 trigger (Round 5 = index 4)
+        if (currentRoundIndex == 4 && !playedRound5Sound)
+        {
+            PlayGameSfx(reachedRound5Clip);
+            playedRound5Sound = true;
+        }
 
         if (IsKahootRound())
         {
@@ -667,10 +693,14 @@ public class GameManager : MonoBehaviour
 
         gamePanel.SetActive(false);
         endPanel.SetActive(true);
+
+        // play end panel sound
+        PlayGameSfx(endPanelClip);
+
         scoreText.text = score + "/10";
 
         if (leaderboardManager != null)
-            leaderboardManager.AddResult(score);
+            leaderboardManager.AddResult(score, playerUsername); // use the typed username
     }
 
     // UI HELPERS

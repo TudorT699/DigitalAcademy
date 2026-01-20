@@ -27,6 +27,7 @@ public class LeaderboardManager : MonoBehaviour
     public Sprite goldIcon;   // Rank 1
     public Sprite silverIcon; // Rank 2
     public Sprite bronzeIcon; // Rank 3
+    public Sprite normalIcon; // Rank 4+
 
     [Header("DEV")]
     public bool resetSavesOnPlay = false;
@@ -88,9 +89,20 @@ public class LeaderboardManager : MonoBehaviour
         rowsRoot.anchoredPosition = pos;
     }
 
+    // if something calls AddResult(score) it will generate a username
     public void AddResult(int score)
     {
-        string username = GenerateUsernameMax6();
+        AddResult(score, null);
+    }
+
+    // lets GameManager pass in the typed username
+    public void AddResult(int score, string username)
+    {
+        // If username is missing, fallback to random name
+        if (string.IsNullOrWhiteSpace(username))
+            username = GenerateUsernameMax6();
+
+        username = username.Trim();
 
         entries.Add(new Entry { name = username, score = score });
 
@@ -137,7 +149,7 @@ public class LeaderboardManager : MonoBehaviour
             else
                 SetText(row, "RankText", ""); // keeps it empty for 4+
 
-            // Rank icon (Image) for Top 3
+            // Rank icon (Image) for Top 3 (and normal for 4+ if assigned)
             SetRankIcon(row, i);
 
             // Other texts
@@ -175,7 +187,7 @@ public class LeaderboardManager : MonoBehaviour
             return;
         }
 
-        // Only top 3 get icons
+        // Top 3 get special icons
         if (index == 0 && goldIcon != null)
         {
             img.enabled = true;
@@ -193,9 +205,17 @@ public class LeaderboardManager : MonoBehaviour
         }
         else
         {
-            // ranks 4+ => no icon
-            img.enabled = false;
-            img.sprite = null;
+            // Rank 4+ -> use normalIcon if provided, otherwise hide
+            if (normalIcon != null)
+            {
+                img.enabled = true;
+                img.sprite = normalIcon;
+            }
+            else
+            {
+                img.enabled = false;
+                img.sprite = null;
+            }
         }
     }
 
